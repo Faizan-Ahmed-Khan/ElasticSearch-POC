@@ -4,6 +4,9 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
+import javax.annotation.PostConstruct;
+import javax.annotation.PreDestroy;
+
 import org.apache.http.HttpHost;
 import org.elasticsearch.client.RestClient;
 import org.slf4j.Logger;
@@ -32,7 +35,7 @@ public class ElasticUtils {
 
 	private Logger logger = LoggerFactory.getLogger(ElasticUtils.class);
 
-//	@PostConstruct
+	@PostConstruct
 	private void init() {
 		logger.info("Establishing connection with the ES");
 		// Create the low-level client
@@ -46,17 +49,16 @@ public class ElasticUtils {
 		logger.info("Connection Established");
 	}
 
-//	@PreDestroy
-//	private void closeConnection() throws IOException {
-//		restClient.close();
-//	}
+	@PreDestroy
+	private void closeConnection() throws IOException {
+		restClient.close();
+	}
 
 	public String indexAFileInElasticSearch(String indexName, String extractedText, String idName)
 			throws AppServiceException {
 		logger.debug("Inside indexAFileInElasticSearch");
-		init();
 		try {
-			checkIfIndexExistsElseCreate(client, indexName);
+			checkIfIndexExistsElseCreate(indexName);
 
 			IndexResponse ir = client.index(builder -> builder.index(indexName)
 					.document(Product.builder().name(extractedText).build()).id(idName));
@@ -71,7 +73,7 @@ public class ElasticUtils {
 		}
 	}
 
-	public void checkIfIndexExistsElseCreate(ElasticsearchClient client, String indexName) throws AppServiceException {
+	public void checkIfIndexExistsElseCreate(String indexName) throws AppServiceException {
 		logger.debug("Inside checkIfIndexExistsElseCreate");
 		try {
 			BooleanResponse resp = client.indices().exists(builder -> builder.index(indexName, ""));
@@ -88,18 +90,11 @@ public class ElasticUtils {
 		} catch (IOException ioEx) {
 			logger.error("IOException Occured while creating an index:: {}", ioEx.getMessage());
 			throw new AppServiceException("IOException Occured while creating an index", ioEx);
-		} finally {
-			try {
-				restClient.close();
-			} catch (IOException e) {
-				e.printStackTrace();
-			}
 		}
 	}
 
 	public List<StoredDocument> searchInElasticSearch(String key) throws AppServiceException {
 		logger.debug("Inside searchInElasticSearch");
-		init();
 		SearchResponse<Product> response;
 		try {
 			response = client.search(s -> s.query(q -> q.term(t -> t.field("name").value(v -> v.stringValue(key)))),
@@ -115,12 +110,6 @@ public class ElasticUtils {
 		} catch (IOException ioEx) {
 			logger.error("IOException Occured while searching a document:: {}", ioEx.getMessage());
 			throw new AppServiceException("IOException Occured while searching a document", ioEx);
-		} finally {
-			try {
-				restClient.close();
-			} catch (IOException e) {
-				e.printStackTrace();
-			}
 		}
 
 	}

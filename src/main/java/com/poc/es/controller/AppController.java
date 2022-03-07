@@ -15,7 +15,7 @@ import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 
 import com.poc.es.model.ResponseObject;
-import com.poc.es.service.impl.AppServiceImpl;
+import com.poc.es.service.IAppService;
 import com.poc.es.utils.AppServiceException;
 
 @RestController
@@ -23,7 +23,7 @@ import com.poc.es.utils.AppServiceException;
 public class AppController {
 
 	@Autowired
-	private AppServiceImpl service;
+	private IAppService service;
 
 	@PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE, path = "/index")
 	public ResponseEntity<ResponseObject> index(@RequestParam String name, @RequestParam MultipartFile document,
@@ -36,7 +36,7 @@ public class AppController {
 			resp.setStatusCode(HttpStatus.OK);
 		} catch (AppServiceException e) {
 			e.printStackTrace();
-			resp.setMessage(e.getMessage() +":: "+ e.getCause());
+			resp.setMessage(e.getMessage() + ":: " + e.getCause());
 			resp.setStatusCode(HttpStatus.INTERNAL_SERVER_ERROR);
 		}
 		return ResponseEntity.created(location).body(resp);
@@ -52,7 +52,7 @@ public class AppController {
 			resp.setStatusCode(HttpStatus.OK);
 		} catch (AppServiceException e) {
 			e.printStackTrace();
-			resp.setMessage(e.getMessage() +":: "+ e.getCause());
+			resp.setMessage(e.getMessage() + ":: " + e.getCause());
 			resp.setStatusCode(HttpStatus.INTERNAL_SERVER_ERROR);
 		}
 		return ResponseEntity.created(location).body(resp);
